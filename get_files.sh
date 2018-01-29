@@ -5,7 +5,8 @@ cd "${SOURCE_DIR}"
 
 source config.sh
 
-python ./cdx-index-client/cdx-index-client.py -p3 -j -z --max-retries 5 \
+# Last run took approx 6d 15h
+python2 ./cdx-index-client/cdx-index-client.py -p3 -j -z --max-retries 5 \
 	-d "${STORAGE_PATH}" \
 	--header 'User-Agent: python-requests/2.9.1/hildenae-at-gmail-com' \
 	--cdx-server-url 'http://web.archive.org/cdx/search/cdx' \
