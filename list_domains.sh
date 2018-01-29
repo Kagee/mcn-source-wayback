@@ -9,29 +9,38 @@ source config.sh
 #MCN_TOOLS="/root/mcn-tools"
 #DOMAINS="mcn-source-wayback.list"
 
-TMP="./extraxt.tmp"
+TMP="./extract.tmp"
+TMP2="./extract2.tmp"
 
-function ext {
-  for X in 1; do #data/*; do 
-    X="$1"
-    #echo $X;
+find ${STORAGE_PATH}/ -type f -name '*.gz' | sort | while read X; do
+  #echo "${X}"
+  OUT="$(dirname "${X}")_urlz/$(basename "${X}" .gz).urlz"
+  if [ ! -f "${OUT}" ]; then 
     gunzip -c "$X" 2> /dev/null > "${TMP}"
     if [ $? -ne 0 ]; then
         echo "${X} failed to extract" 1>&2;
         continue;
     fi
-    echo "${X} extracted ok";
-    jq -r '.[][2]' "${TMP}" | uniq 
-    #while [ $(df . | awk '/vda1/{print substr($5, 1, length($5)-1)}') -gt 52 ]; do echo "less that 52";sleep 10s; done
-  done
-}
+    echo "${X} extracted ok (${OUT})";
+    jq -r '.[][2]' "${TMP}" | sort | uniq | \
+        iconv -c -f utf-8 -t utf-8 | sed -e 's/\.no\.html/.html/g' | \
+        ${MCN_TOOLS}/urldecode 3 | gzip > "${TMP2}";
+    mv "${TMP2}" "${OUT}";
+    if [ $(df . | awk '/vda1/{print substr($5, 1, length($5)-1)}') -gt 90 ]; then
+      pushover "Storage space less than 90%, halting url extraction"
+      while [ $(df . | awk '/vda1/{print substr($5, 1, length($5)-1)}') -gt 90 ]; do 
+          echo "more than 90% of /dev/vda1/ used";
+          sleep 5m; 
+      done
+    fi
+  else
+    echo "Found ${OUT}, skipping";
+  fi
+done
 
-ext "$(cat errors.txt| sort -R | head -1 | grep -o '/root.*.gz')"
-ext "/root/mcn-source-wayback/data/domain-no-40000.gz"
+#find ${STORAGE_PATH}/ -type f -name '*.gz' -exec gunzip -c {} \; | \
+#        parallel --jobs ${THREADS} --pipe iconv -c -f utf-8 -t utf-8 | \
+#        sed -e 's/\.no\.html/.html/g' | \
+#        ${MCN_TOOLS}/urldecode 3 | ${MCN_TOOLS}/default_extract > "${DOMAINS}"
 
-find ${STORAGE_PATH}/ -type f -name '*.gz' -exec gunzip -c {} \; | \
-        parallel --jobs ${THREADS} --pipe iconv -c -f utf-8 -t utf-8 | \
-        sed -e 's/\.no\.html/.html/g' | \
-        ${MCN_TOOLS}/urldecode 3 | ${MCN_TOOLS}/default_extract > "${DOMAINS}"
-
-rm "${TMP}"
+rm "${TMP}" "${TMP2}"
