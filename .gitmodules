@@ -1,0 +1,3 @@
+[submodule "cdx-index-client"]
+	path = cdx-index-client
+	url = git@github.com:Kagee/cdx-index-client.git
