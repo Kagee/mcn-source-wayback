@@ -1,6 +1,8 @@
+#! /bin/bash
+# MCN_TOOLS have moved to system config file
+source "$HOME/.mcn.conf"
+
 STORAGE_PATH="$PWD/data"
 THREADS=3
-
-MCN_TOOLS="/root/mcn-tools"
 
 DOMAINS="mcn-source-wayback.list"
