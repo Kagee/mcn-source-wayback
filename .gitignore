@@ -1,5 +1,4 @@
-data/*
-data_urlz/*
+data*
 .noborg
 *.list
 *.txt
